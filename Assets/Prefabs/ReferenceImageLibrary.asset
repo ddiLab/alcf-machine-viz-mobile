@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
+  m_Name: ReferenceImageLibrary
+  m_EditorClassIdentifier: 
+  m_GuidLow: 5093830795934987572
+  m_GuidHigh: 13843459383589904774
+  m_DataStore:
+    m_Storage: []
+  m_Images:
+  - m_SerializedGuid:
+      m_GuidLow: 5011726871628833715
+      m_GuidHigh: 7611391182480213643
+    m_SerializedTextureGuid:
+      m_GuidLow: 9516881155902396727
+      m_GuidHigh: 5524403757073303322
+    m_Size: {x: 0.1, y: 0.056179777}
+    m_SpecifySize: 1
+    m_Name: Cooley
+    m_Texture: {fileID: 2800000, guid: 1b2bd937c0fd84121a073090f29faa4c, type: 3}
