@@ -8,6 +8,7 @@ public class TrackedImageHandler : MonoBehaviour
 {
 
     public ARTrackedImageManager m_TrackedImageManager;
+    public CooleyManager cooleyManager;
     public GameObject imageFoundPrefab;
 
     private GameObject cooleyImageFoundGO;
@@ -41,7 +42,8 @@ public class TrackedImageHandler : MonoBehaviour
                 cooleyImageFoundText = cooleyImageFoundGO.transform.Find("Text (TMP)").GetComponent<TextMeshPro>();
 
                 cooleyImageFoundGO.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
-                cooleyImageFoundText.text = "Cooley Viz!";
+                
+                SetupCooleyViz(true);
             }
             
         }
@@ -55,13 +57,44 @@ public class TrackedImageHandler : MonoBehaviour
                 cooleyImageFoundGO.transform.position = updatedImage.transform.localPosition;
                 cooleyImageFoundGO.transform.localEulerAngles = updatedImage.transform.localEulerAngles;
 
-                cooleyImageFoundText.text = "Cooley Viz!";
+                SetupCooleyViz(false, updatedImage.transform);
             }
         }
 
         foreach (var removedImage in eventArgs.removed)
         {
             // Handle removed event
+        }
+    }
+
+
+    private void SetupCooleyViz(bool initializeViz, Transform imageTransform = null)
+    {
+        Color textColor;
+
+        if (cooleyManager.IsMachineRunning())
+        {
+            if (initializeViz)
+            {
+                cooleyManager.CreateGameObjects();
+            }
+            else
+            {
+                cooleyManager.UpdateGameObjects(imageTransform);
+            }
+
+            
+            cooleyImageFoundText.text = "Cooley Viz!";
+
+            ColorUtility.TryParseHtmlString("#128F7C", out textColor);
+            cooleyImageFoundText.color = textColor;
+        }
+        else
+        {
+            cooleyImageFoundText.text = "Cooley is under maintenance.";
+
+            ColorUtility.TryParseHtmlString("#C88500", out textColor);
+            cooleyImageFoundText.color = textColor;
         }
     }
 }
