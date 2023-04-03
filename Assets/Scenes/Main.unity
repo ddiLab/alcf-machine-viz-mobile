@@ -1741,7 +1741,8 @@ MonoBehaviour:
   legendPrefab: {fileID: 0}
   rackPrefab: {fileID: 7252268060992524571, guid: d9d1bda5141094e10846626789c954c7,
     type: 3}
-  showAllNodesButton: {fileID: 0}
+  showAllNodesButtonGO: {fileID: 0}
+  toggleRacksButtonGO: {fileID: 1565127133}
   numOfRacks: 0
   nodesPerRack: 0
 --- !u!4 &1382969862
@@ -2296,7 +2297,6 @@ MonoBehaviour:
   arCameraGO: {fileID: 1354141925}
   arSessionOriginGO: {fileID: 1659859597}
   openSettingsButtonGO: {fileID: 747728177}
-  toggleCooleyRacksButtonGO: {fileID: 1565127133}
   arPlanePrefab: {fileID: 4776765576899091622, guid: afd2622a254c94cdab22cf59f87fd3e1,
     type: 3}
   cooleyManager: {fileID: 1382969861}
