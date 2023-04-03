@@ -41,7 +41,7 @@ public class TrackedImageHandler : MonoBehaviour
                 cooleyImageFoundGO = Instantiate(imageFoundPrefab);
                 cooleyImageFoundText = cooleyImageFoundGO.transform.Find("Text (TMP)").GetComponent<TextMeshPro>();
 
-                cooleyImageFoundGO.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
+                cooleyImageFoundGO.transform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
                 
                 SetupCooleyViz(true);
             }
@@ -91,9 +91,9 @@ public class TrackedImageHandler : MonoBehaviour
         }
         else
         {
-            cooleyImageFoundText.text = "Cooley is under maintenance.";
+            cooleyImageFoundText.text = "Cooley is under\nmaintenance";
 
-            ColorUtility.TryParseHtmlString("#C88500", out textColor);
+            ColorUtility.TryParseHtmlString("#FFCA00", out textColor);
             cooleyImageFoundText.color = textColor;
         }
     }

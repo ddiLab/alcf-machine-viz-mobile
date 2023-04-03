@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -100,7 +101,7 @@ public class CooleyManager : MonoBehaviour
     /// <summary>
     /// Holds the GameObject that represents the legend for Cooley.
     /// </summary>
-    private GameObject legend;
+    private GameObject legendGO;
 
     /// <summary>
     /// Holds the position of the image representing Cooley in the phyiscal world, and is used as an offset 
@@ -164,7 +165,12 @@ public class CooleyManager : MonoBehaviour
     /// <summary>
     /// Holds the button that let's a user display all the nodes after filtering them based on job ids.
     /// </summary>
-    public GameObject showAllNodesButton;
+    public GameObject showAllNodesButtonGO;
+
+    /// <summary>
+    /// Holds the button that let's a user toggle the virtual representation of Cooley's racks.
+    /// </summary>
+    public GameObject toggleRacksButtonGO;
 
     /// <summary>
     /// Holds the script that controlls the menu that displays all the running, queued and reserved jobs of Cooley.
@@ -194,10 +200,14 @@ public class CooleyManager : MonoBehaviour
     {
         RacksVisible = true;
 
+        // Disables the toggle racks button in settings when the app starts
+        toggleRacksButtonGO.GetComponent<Toggle>().interactable = false;
+
+
         //legendActiveNodeCountdown = LEGEND_ACTIVE_NODE_TIMER_VALUE;
 
         // Hide show all nodes button in job menu since all nodes are show initially
-        //showAllNodesButton.SetActive(false);
+        //showAllNodesButtonGO.SetActive(false);
     }
 
 
@@ -244,7 +254,7 @@ public class CooleyManager : MonoBehaviour
            
                 legendActiveNodeCountdown = LEGEND_ACTIVE_NODE_TIMER_VALUE;
 
-                legend.transform.Find("Content").Find("Nodes").Find("AllocatedNode").Find("Node").GetComponent<MeshRenderer>().material.color = Random.ColorHSV();
+                legendGO.transform.Find("Content").Find("Nodes").Find("AllocatedNode").Find("Node").GetComponent<MeshRenderer>().material.color = Random.ColorHSV();
             }
             */
                 
@@ -311,8 +321,14 @@ public class CooleyManager : MonoBehaviour
 
         // Checks if cooley is under maintenance
         if (fetchedData.GetValue("maint") != null)
+        {
+            // Disables the toggle racks button in settings
+            toggleRacksButtonGO.GetComponent<Toggle>().interactable = false;
             return false;
+        }
 
+        // Enables the toggle racks button in settings
+        toggleRacksButtonGO.GetComponent<Toggle>().interactable = true;
         return true;
     }
 
@@ -342,11 +358,11 @@ public class CooleyManager : MonoBehaviour
         contentGO.transform.parent = cooleyGO.transform;
 
         /*
-        legend = Instantiate(legendPrefab, new Vector3(0.5f, RACK_HEIGHT, -0.4f), Quaternion.identity);
-        legend.transform.name = "Legend";
-        legend.transform.eulerAngles = new Vector3(0, -90, 0);
-        legend.transform.localScale = new Vector3(4, 4, 1);
-        legend.transform.parent = contentGO.transform;
+        legendGO = Instantiate(legendPrefab, new Vector3(0.5f, RACK_HEIGHT, -0.4f), Quaternion.identity);
+        legendGO.transform.name = "Legend";
+        legendGO.transform.eulerAngles = new Vector3(0, -90, 0);
+        legendGO.transform.localScale = new Vector3(4, 4, 1);
+        legendGO.transform.parent = contentGO.transform;
         */
 
         racksGameObjects = new GameObject[numOfRacks];
@@ -405,7 +421,7 @@ public class CooleyManager : MonoBehaviour
     /// </para>
     /// </summary>
     /// <param name="image">Transform component of the image detected that represents the Cooley computer.</param>
-    public void UpdateGameObjects(Transform image)
+    public void UpdateGameObjects(Transform imageTF)
     {
         string nodeId;                // Holds the ID of the current node
         //string nodeState;             // Holds the state of the current node
@@ -416,8 +432,8 @@ public class CooleyManager : MonoBehaviour
         float currentZ = 0;           // Holds the current 'z' (horizontal) positioning of the current node
 
         // Saves the position and rotation of the image and uses it as an offset
-        positionOffset = image.position;
-        angleOffset = image.rotation;
+        positionOffset = imageTF.position;
+        angleOffset = imageTF.rotation;
 
         // Initially sets the "Cooley" GameObject to be placed on top of the image and holding the same rotation
         cooleyGO.transform.position = positionOffset;
@@ -488,7 +504,7 @@ public class CooleyManager : MonoBehaviour
         UpdateNodesColors();
         
         // Rotates the "Cooley" GameObject to always be facing to the right (perpendicular to the images rotation) no matter how the image is rotates in the 'y'.
-        cooleyGO.transform.localEulerAngles = new Vector3(0, image.transform.localEulerAngles.x > 90 ? Mathf.Abs(image.transform.localEulerAngles.y) + Mathf.Abs(image.transform.localEulerAngles.z) : image.transform.localEulerAngles.y - image.transform.localEulerAngles.z, 0);
+        cooleyGO.transform.localEulerAngles = new Vector3(0, imageTF.transform.localEulerAngles.x > 90 ? Mathf.Abs(imageTF.transform.localEulerAngles.y) + Mathf.Abs(imageTF.transform.localEulerAngles.z) : imageTF.transform.localEulerAngles.y - imageTF.transform.localEulerAngles.z, 0);
     }
 
 
@@ -622,7 +638,7 @@ public class CooleyManager : MonoBehaviour
         Debug.Log(jobId);
         
         // Show the Show All Nodes button since we will filter through the nodes now
-        showAllNodesButton.SetActive(true);
+        showAllNodesButtonGO.SetActive(true);
         
 
         foreach(var job in runningJobsInfo)
@@ -672,7 +688,7 @@ public class CooleyManager : MonoBehaviour
         }
 
         // Hides the Show All Nodes button, since all nodes are now visibile
-        showAllNodesButton.SetActive(false);
+        showAllNodesButtonGO.SetActive(false);
     }
     */
 }

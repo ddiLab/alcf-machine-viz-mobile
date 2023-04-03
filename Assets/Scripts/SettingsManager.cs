@@ -10,21 +10,17 @@ public class SettingsManager : MonoBehaviour
     public GameObject arCameraGO;
     public GameObject arSessionOriginGO;
     public GameObject openSettingsButtonGO;
-    public GameObject toggleCooleyRacksButtonGO;
     public GameObject arPlanePrefab;
 
     public CooleyManager cooleyManager;
 
     private AROcclusionManager arOcclusionManager;
     private ARPlaneManager arPlaneManager;
-    private Toggle cooleyToggleClickable;
     private bool arPlanesVisible = true;
 
     // Start is called before the first frame update
     void Start()
     {
-        cooleyToggleClickable = toggleCooleyRacksButtonGO.GetComponent<Toggle>();
-
         arOcclusionManager = arCameraGO.GetComponent<AROcclusionManager>();
         arPlaneManager = arSessionOriginGO.GetComponent<ARPlaneManager>();
     }
@@ -41,16 +37,6 @@ public class SettingsManager : MonoBehaviour
         Screen.orientation = ScreenOrientation.Portrait;
         settingsPanelGO.SetActive(true);
         openSettingsButtonGO.SetActive(false);
-
-        Debug.Log(GameObject.Find("Cooley"));
-        if (GameObject.Find("Cooley") != null)
-        {
-            cooleyToggleClickable.interactable = true;
-        }
-        else
-        {
-            cooleyToggleClickable.interactable = false;
-        }
     }
 
 
