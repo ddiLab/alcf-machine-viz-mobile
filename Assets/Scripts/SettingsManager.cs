@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
+using TMPro;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class SettingsManager : MonoBehaviour
     public GameObject arSessionOriginGO;
     public GameObject openSettingsButtonGO;
     public GameObject arPlanePrefab;
+    //public TextMeshProUGUI closeButtonTMP;
 
     public CooleyManager cooleyManager;
 
@@ -37,6 +39,10 @@ public class SettingsManager : MonoBehaviour
         Screen.orientation = ScreenOrientation.Portrait;
         settingsPanelGO.SetActive(true);
         openSettingsButtonGO.SetActive(false);
+
+
+        // Sets the shader of the UI text to overlay to not be affected by the occlusion when the menu is open
+        //closeButtonTM.fontSharedMaterial.shader = Shader.Find("TextMeshPro/Mobile/Distance Field Overlay");
     }
 
 
@@ -45,6 +51,8 @@ public class SettingsManager : MonoBehaviour
         Screen.orientation = ScreenOrientation.AutoRotation;
         settingsPanelGO.SetActive(false);
         openSettingsButtonGO.SetActive(true);
+
+        //closeButtonTM.fontSharedMaterial.shader = Shader.Find("TextMeshPro/Mobile/Distance Field");
     }
 
 
