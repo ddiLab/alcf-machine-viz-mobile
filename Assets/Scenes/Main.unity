@@ -1733,13 +1733,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28eb135ca624f4606afff664aa7efef6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  racksGameObjects: []
+  visibleRacksArr: []
+  invisibleRacksArr: []
   activeNodePrefab: {fileID: 974140376473800956, guid: 938c55c9bcffd4d6aa5fd4ca58c5b8d3,
     type: 3}
   inactiveNodePrefab: {fileID: 974140376473800956, guid: 314a229322f5d4ccca50f232c556efe7,
     type: 3}
   legendPrefab: {fileID: 0}
-  rackPrefab: {fileID: 7252268060992524571, guid: d9d1bda5141094e10846626789c954c7,
+  visibleRackPrefab: {fileID: 7252268060992524571, guid: d9d1bda5141094e10846626789c954c7,
+    type: 3}
+  invisibleRackPrefab: {fileID: 7252268060992524571, guid: 7519a8e7ad58a470aa02e12d5377d863,
     type: 3}
   showAllNodesButtonGO: {fileID: 0}
   toggleRacksButtonGO: {fileID: 1565127133}

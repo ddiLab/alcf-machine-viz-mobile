@@ -135,12 +135,17 @@ public class CooleyManager : MonoBehaviour
     /// Holds a dictionary of all the GameObjects that represent a node in Cooley where a key is the node ID and the value is the
     /// GameObject representing that node ID.
     /// </summary>
-    public Dictionary<string, GameObject> nodesGameObjects = new Dictionary<string, GameObject>();
+    public Dictionary<string, GameObject> nodesDict = new Dictionary<string, GameObject>();
 
     /// <summary>
-    /// Holds an array of all the GameObjects that represent a rack of Cooley.
+    /// Holds an array of all the GameObjects that represent an invisible rack of Cooley.
     /// </summary>
-    public GameObject[] racksGameObjects;
+    public GameObject[] visibleRacksArr;
+
+    /// <summary>
+    /// Holds an array of all the GameObjects that represent a visible rack of Cooley.
+    /// </summary>
+    public GameObject[] invisibleRacksArr;
 
     /// <summary>
     /// Holds the Prefab that represents an active node.
@@ -158,9 +163,14 @@ public class CooleyManager : MonoBehaviour
     public GameObject legendPrefab;
 
     /// <summary>
-    /// Holds the Prefab that represents a rack of Cooley.
+    /// Holds the Prefab that represents a visible rack of Cooley.
     /// </summary>
-    public GameObject rackPrefab;
+    public GameObject visibleRackPrefab;
+
+    /// <summary>
+    /// Holds the Prefab that represents an invisible rack of Cooley.
+    /// </summary>
+    public GameObject invisibleRackPrefab;
 
     /// <summary>
     /// Holds the button that let's a user display all the nodes after filtering them based on job ids.
@@ -365,19 +375,29 @@ public class CooleyManager : MonoBehaviour
         legendGO.transform.parent = contentGO.transform;
         */
 
-        racksGameObjects = new GameObject[numOfRacks];
+        visibleRacksArr = new GameObject[numOfRacks];
+        invisibleRacksArr = new GameObject[numOfRacks];
 
         // Clones the racks Prefab depending on how many racks the computer has
         for (int i = 0; i < numOfRacks; i++)
         {
-            racksGameObjects[i] = Instantiate(rackPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-            racksGameObjects[i].transform.name = "rack" + i;
+            visibleRacksArr[i] = Instantiate(visibleRackPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            invisibleRacksArr[i] = Instantiate(invisibleRackPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+
+            visibleRacksArr[i].transform.name = "Visible Rack" + i;
+            invisibleRacksArr[i].transform.name = "Invisible Rack" + i;
+
 
             // Rotates racks to face towards perpendicular to the image representing Cooley
-            racksGameObjects[i].transform.eulerAngles = new Vector3(0, 90, 0);
+            visibleRacksArr[i].transform.eulerAngles = new Vector3(0, 90, 0);
+            invisibleRacksArr[i].transform.eulerAngles = new Vector3(0, 90, 0);
 
             // Places the racks object as a child of the "Content" GameObject
-            racksGameObjects[i].transform.parent = contentGO.transform;
+            visibleRacksArr[i].transform.parent = contentGO.transform;
+            invisibleRacksArr[i].transform.parent = contentGO.transform;
+
+            visibleRacksArr[i].SetActive(RacksVisible);
+            invisibleRacksArr[i].SetActive(!RacksVisible);
         }
 
    
@@ -392,23 +412,23 @@ public class CooleyManager : MonoBehaviour
             if (nodeState.Equals("idle") || nodeState.Equals("allocated"))
             {
                 // The current node is active, and is either iddling or has a job allocated
-                nodesGameObjects[nodeId] = Instantiate(activeNodePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                nodesDict[nodeId] = Instantiate(activeNodePrefab, new Vector3(0, 0, 0), Quaternion.identity);
             }
             else
             {
                 // The current node is inactive ("down")
-                nodesGameObjects[nodeId] = Instantiate(inactiveNodePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                nodesDict[nodeId] = Instantiate(inactiveNodePrefab, new Vector3(0, 0, 0), Quaternion.identity);
             }
 
-            nodesGameObjects[nodeId].transform.name = nodeId;
+            nodesDict[nodeId].transform.name = nodeId;
 
             // Rotates nodes to face perpendicular to the image represneting Cooley
-            nodesGameObjects[nodeId].transform.eulerAngles = new Vector3(0, -90, 0);
+            nodesDict[nodeId].transform.eulerAngles = new Vector3(0, -90, 0);
 
-            nodesGameObjects[nodeId].transform.localScale = new Vector3(0.12f, 0.12f, 0.12f);
+            nodesDict[nodeId].transform.localScale = new Vector3(0.12f, 0.12f, 0.12f);
 
             // Places the node object as a child of the "Content" GameObject
-            nodesGameObjects[nodeId].transform.parent = contentGO.transform;
+            nodesDict[nodeId].transform.parent = contentGO.transform;
         }
     }
 
@@ -447,7 +467,8 @@ public class CooleyManager : MonoBehaviour
         for (int i = 0; i < numOfRacks; i++)
         {
             // Seperates the racks to be placed in a row next to each other
-            racksGameObjects[i].transform.localPosition = new Vector3(0, 0, i * RACK_WIDTH);
+            visibleRacksArr[i].transform.localPosition = new Vector3(0, 0, i * RACK_WIDTH);
+            invisibleRacksArr[i].transform.localPosition = new Vector3(0, 0, i * RACK_WIDTH);
         }
 
 
@@ -492,8 +513,8 @@ public class CooleyManager : MonoBehaviour
             // Positions all active nodes in their current position
             //if (!nodeState.Equals("down"))
             //{
-                nodesGameObjects[nodeId].transform.localPosition = new Vector3(-0.2f, currentY, currentZ + 0.1f); // Adds 0.1 meters between each nodes in a rack
-                nodesGameObjects[nodeId].transform.Find("Id").GetComponent<TextMeshPro>().text = "\n\n" + nodeId;
+                nodesDict[nodeId].transform.localPosition = new Vector3(-0.2f, currentY, currentZ + 0.1f); // Adds 0.1 meters between each nodes in a rack
+                nodesDict[nodeId].transform.Find("Id").GetComponent<TextMeshPro>().text = "\n\n" + nodeId;
             //}
 
             // Increments the column and the horizontal positioning
@@ -548,7 +569,7 @@ public class CooleyManager : MonoBehaviour
                     ColorUtility.TryParseHtmlString("#FFFFFF", out nodeColor);
                 }
                     
-                nodesGameObjects[nodeId].transform.Find("Node").GetComponent<MeshRenderer>().material.color = nodeColor;
+                nodesDict[nodeId].transform.Find("Node").GetComponent<MeshRenderer>().material.color = nodeColor;
             }
         }
     }
@@ -621,7 +642,8 @@ public class CooleyManager : MonoBehaviour
 
         for (int i = 0; i < numOfRacks; i++)
         {
-            racksGameObjects[i].SetActive(RacksVisible);
+            visibleRacksArr[i].SetActive(RacksVisible);
+            invisibleRacksArr[i].SetActive(!RacksVisible);
         }
     }
 
@@ -659,7 +681,7 @@ public class CooleyManager : MonoBehaviour
 
 
         // Makes all of the nodes invisible
-        foreach (var nodeGameObject in nodesGameObjects)
+        foreach (var nodeGameObject in nodesDict)
         {
             // Accounts for nodes without a gameobject
             if(nodeGameObject.Value != null)
@@ -669,7 +691,7 @@ public class CooleyManager : MonoBehaviour
         // Makes the nodes for the given job ID visibile only
         foreach(var node in nodesToShow)
         {
-            nodesGameObjects[node].SetActive(true);
+            nodesDict[node].SetActive(true);
         }
     }
     */
@@ -680,7 +702,7 @@ public class CooleyManager : MonoBehaviour
     /*
     public void ShowAllNodeGameObjects()
     {
-        foreach (var nodeGameObject in nodesGameObjects)
+        foreach (var nodeGameObject in nodesDict)
         {
             // Accounts for nodes without a gameobject
             if (nodeGameObject.Value != null)
