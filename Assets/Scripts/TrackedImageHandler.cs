@@ -43,6 +43,7 @@ public class TrackedImageHandler : MonoBehaviour
 
                 cooleyImageFoundGO.transform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
                 
+                cooleyManager.GetData();
                 SetupCooleyViz(true);
             }
             
@@ -72,6 +73,7 @@ public class TrackedImageHandler : MonoBehaviour
     {
         Color textColor;
 
+        
         if (cooleyManager.IsMachineRunning())
         {
             if (initializeViz)
