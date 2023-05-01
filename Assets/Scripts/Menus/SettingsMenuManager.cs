@@ -35,6 +35,8 @@ public class SettingsMenuManager : MonoBehaviour
     {
         arOcclusionManager = arCameraGO.GetComponent<AROcclusionManager>();
         arPlaneManager = arSessionOriginGO.GetComponent<ARPlaneManager>();
+
+        Screen.orientation = ScreenOrientation.Portrait;
     }
 
     // Update is called once per frame
@@ -46,7 +48,7 @@ public class SettingsMenuManager : MonoBehaviour
 
     public void OpenSettingsMenu()
     {
-        Screen.orientation = ScreenOrientation.Portrait;
+        //Screen.orientation = ScreenOrientation.Portrait;
         panelGO.SetActive(true);
         openButtonGO.SetActive(false);
 
@@ -56,7 +58,7 @@ public class SettingsMenuManager : MonoBehaviour
 
     public void CloseSettingsMenu()
     {
-        Screen.orientation = ScreenOrientation.AutoRotation;
+        //Screen.orientation = ScreenOrientation.AutoRotation;
         panelGO.SetActive(false);
         openButtonGO.SetActive(true);
 
