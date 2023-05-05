@@ -96,6 +96,9 @@ public class JobsMenuManager : MonoBehaviour
     private TextMeshProUGUI reservedPanelDurationText;
 
     [SerializeField]
+    private TextMeshProUGUI reservedPanelTMinusText;
+
+    [SerializeField]
     private TextMeshProUGUI queuedPanelTitleText;
 
     [SerializeField]
@@ -168,6 +171,9 @@ public class JobsMenuManager : MonoBehaviour
     {
         OpenJobsMenu();
         filteredRunningJobPanelGO.SetActive(false);
+
+        cooleyManager.CurrentInfoPanel["type"] = "none";
+        cooleyManager.CurrentInfoPanel["id"] = "none";
     }
 
     public void OpenQueuedJobsInfoPanel()
@@ -178,6 +184,9 @@ public class JobsMenuManager : MonoBehaviour
     public void CloseQueuedJobsInfoPanel()
     {
         queuedJobPanelGO.SetActive(false);
+
+        cooleyManager.CurrentInfoPanel["type"] = "none";
+        cooleyManager.CurrentInfoPanel["id"] = "none";
     }
 
     public void OpenReservedJobsInfoPanel()
@@ -188,6 +197,9 @@ public class JobsMenuManager : MonoBehaviour
     public void CloseReservedJobsInfoPanel()
     {
         reservedJobPanelGO.SetActive(false);
+
+        cooleyManager.CurrentInfoPanel["type"] = "none";
+        cooleyManager.CurrentInfoPanel["id"] = "none";
     }
 
     public void SetActiveJobsMenuButton(bool newStatus)
@@ -211,6 +223,7 @@ public class JobsMenuManager : MonoBehaviour
             runningJobsScrollViewGO.SetActive(true);
             queuedJobsScrollViewGO.SetActive(false);
             reservedJobsScrollViewGO.SetActive(false);
+
         }
         else if (jobType.Equals("queued"))
         {
@@ -221,6 +234,7 @@ public class JobsMenuManager : MonoBehaviour
             runningJobsScrollViewGO.SetActive(false);
             queuedJobsScrollViewGO.SetActive(true);
             reservedJobsScrollViewGO.SetActive(false);
+
         }
         else if (jobType.Equals("reserved"))
         {
@@ -231,6 +245,7 @@ public class JobsMenuManager : MonoBehaviour
             runningJobsScrollViewGO.SetActive(false);
             queuedJobsScrollViewGO.SetActive(false);
             reservedJobsScrollViewGO.SetActive(true);
+
         }
     }
 
@@ -260,6 +275,8 @@ public class JobsMenuManager : MonoBehaviour
             newRunningJobButtonGO.transform.Find("Text (TMP)").GetComponent<TextMeshProUGUI>().text = currJobId + "\n" + currJobInfo["projectName"];
             
             newRunningJobButtonGO.transform.GetComponent<Button>().onClick.AddListener(() => cooleyManager.FilterNodeGameObjectsByJobId(currJobId));
+        
+            
         }
     }
 
@@ -280,9 +297,11 @@ public class JobsMenuManager : MonoBehaviour
             newQueuedJobButtonGO = Instantiate(queuedJobButtonPrefab, queuedJobsContentGO.transform);
             newQueuedJobButtonGO.transform.name = currJobId;
 
-            newQueuedJobButtonGO.transform.Find("Text (TMP)").GetComponent<TextMeshProUGUI>().text = currJobId + "\n" + currJobInfo["projectName"] + "\n" + currJobInfo["score"];
+            newQueuedJobButtonGO.transform.Find("Text (TMP)").GetComponent<TextMeshProUGUI>().text = currJobId + "\n" + currJobInfo["projectName"];
         
             newQueuedJobButtonGO.transform.GetComponent<Button>().onClick.AddListener(() => cooleyManager.ShowQueuedJobInfo(currJobId));
+        
+            
         }
     }
 
@@ -307,6 +326,8 @@ public class JobsMenuManager : MonoBehaviour
             newReservedJobButtonGO.transform.Find("Text (TMP)").GetComponent<TextMeshProUGUI>().text = currJobName + "\n" + currJobInfo["nodePartitions"];
             
             newReservedJobButtonGO.transform.GetComponent<Button>().onClick.AddListener(() => cooleyManager.ShowReservedJobInfo(currJobName));
+        
+            
         }
     }
 
@@ -315,6 +336,9 @@ public class JobsMenuManager : MonoBehaviour
         DateTime currentRunTime = DateTime.ParseExact(runTime, "HH:mm:ss", CultureInfo.InvariantCulture);
         DateTime maxWalltime = DateTime.ParseExact("12:00:00", "HH:mm:ss", CultureInfo.InvariantCulture);
         DateTime jobWalltime = DateTime.ParseExact(walltime, "HH:mm:ss", CultureInfo.InvariantCulture);
+
+        cooleyManager.CurrentInfoPanel["type"] = "running";
+        cooleyManager.CurrentInfoPanel["id"] = jobId;
 
         filteredRunningPanelTitleText.text = jobId + "\n" + projectName;
         filteredRunningPanelRunTimeText_1.text = runTime;
@@ -330,6 +354,9 @@ public class JobsMenuManager : MonoBehaviour
     {
         OpenQueuedJobsInfoPanel();
 
+        cooleyManager.CurrentInfoPanel["type"] = "queued";
+        cooleyManager.CurrentInfoPanel["id"] = jobId;
+
         queuedPanelTitleText.text = jobId + "\n" + name;
         queuedPanelScoreText.text = score;
         queuedPanelQueueText.text = queue;
@@ -339,14 +366,18 @@ public class JobsMenuManager : MonoBehaviour
         queuedPanelModeText.text = mode;
     }
 
-    public void UpdateReservedJobPanel(string name, string queue, string partitions, string formatedStartTime, string formatedDuration)
+    public void UpdateReservedJobPanel(string name, string queue, string partitions, string formatedStartTime, string formatedDuration, string tMinus)
     {
         OpenReservedJobsInfoPanel();
+
+        cooleyManager.CurrentInfoPanel["type"] = "reserved";
+        cooleyManager.CurrentInfoPanel["id"] = name;
         
         reservedPanelTitleText.text = name;
         reservedPanelQueueText.text = queue;
         reservedPanelPartitionsText.text = partitions;
         reservedPanelStartTimeText.text = formatedStartTime;
         reservedPanelDurationText.text = formatedDuration;
+        reservedPanelTMinusText.text = tMinus;
     }
 }

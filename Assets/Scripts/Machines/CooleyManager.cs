@@ -120,7 +120,6 @@ public class CooleyManager : MonoBehaviour
 
     private SortedDictionary<string, Dictionary<string, string>> reservedJobsDict = new SortedDictionary<string, Dictionary<string, string>>();
 
-
     /// <summary>
     /// Holds the left over time of the timer to fetch new data.
     /// </summary>
@@ -193,11 +192,18 @@ public class CooleyManager : MonoBehaviour
     public bool RacksVisible { get; private set; }
 
 
+    public Dictionary<string, string> CurrentInfoPanel {get; set;}
+
+
     // Start is called before the first frame update
     // Used to initialize the coundown timers and visiblity of GameObjects.
     void Start()
     {
         RacksVisible = true;
+
+        CurrentInfoPanel = new Dictionary<string, string>(2);
+        CurrentInfoPanel.Add("type", "none");
+        CurrentInfoPanel.Add("id", "none");
 
         // Disables the toggle racks button in settings when the app starts
         settingsMenuManager.SetToggleRacksButtonInteractable(false);
@@ -228,6 +234,14 @@ public class CooleyManager : MonoBehaviour
                 UpdateNodesColors();
 
                 UpdateJobsMenu();
+
+                if (CurrentInfoPanel["type"].Equals("running"))
+                    ShowFilteredRunningJobInfo(CurrentInfoPanel["id"]);
+                else if (CurrentInfoPanel["type"].Equals("queued"))
+                    ShowQueuedJobInfo(CurrentInfoPanel["id"]);
+                else if (CurrentInfoPanel["type"].Equals("reserved"))
+                    ShowReservedJobInfo(CurrentInfoPanel["id"]);
+                
             }
                 
         }
@@ -638,7 +652,6 @@ public class CooleyManager : MonoBehaviour
     {
         List<string> nodesToShow = new List<string>(); // Holds a list of all the nodes that are allocated to the given job ID
         
-
         foreach(var job in runningJobsInfo)
         {
             // Checks if the current job ID is the given job ID
@@ -675,13 +688,7 @@ public class CooleyManager : MonoBehaviour
         
         jobsMenuManager.OpenFilteredRunningJobsInfoPanel();
 
-        foreach (var currJob in runningJobsInfo)
-        {
-            if (currJob["jobid"].ToString().Equals(jobId))
-            {
-                jobsMenuManager.UpdateFilteredRunningJobPanel(jobId, currJob["project"].ToString(), currJob["runtimef"].ToString(), currJob["walltimef"].ToString());
-            }
-        }
+        ShowFilteredRunningJobInfo(jobId);
     }
 
     /// <summary>
@@ -698,6 +705,19 @@ public class CooleyManager : MonoBehaviour
 
         // Hides the Show All Nodes button, since all nodes are now visibile
         jobsMenuManager.SetActiveShowAllNodesButton(false);
+    }
+
+    public void ShowFilteredRunningJobInfo(string jobId)
+    {
+        foreach (var currJob in runningJobsInfo)
+        {
+            if (currJob["jobid"].ToString().Equals(jobId))
+            {
+                jobsMenuManager.UpdateFilteredRunningJobPanel(jobId, currJob["project"].ToString(), currJob["runtimef"].ToString(), currJob["walltimef"].ToString());
+                
+                break;
+            }
+        }
     }
 
     public void ShowQueuedJobInfo(string jobId)
@@ -722,7 +742,7 @@ public class CooleyManager : MonoBehaviour
         {
             if (currJob["name"].ToString().Equals(jobName))
             {
-                jobsMenuManager.UpdateReservedJobPanel(currJob["name"].ToString(), currJob["queue"].ToString(), currJob["partitions"].ToString(), currJob["startf"].ToString(), currJob["durationf"].ToString());
+                jobsMenuManager.UpdateReservedJobPanel(currJob["name"].ToString(), currJob["queue"].ToString(), currJob["partitions"].ToString(), currJob["startf"].ToString(), currJob["durationf"].ToString(), currJob["tminus"].ToString());
                 break;
             }
         }
