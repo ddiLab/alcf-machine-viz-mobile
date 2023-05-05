@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
+using System.Globalization;
 
 public class JobsMenuManager : MonoBehaviour
 {
@@ -46,6 +48,9 @@ public class JobsMenuManager : MonoBehaviour
     private GameObject runningJobsContentGO;
 
     [SerializeField]
+    private GameObject queuedJobsContentGO;
+
+    [SerializeField]
     private GameObject reservedJobsContentGO;
 
     [SerializeField]
@@ -61,16 +66,19 @@ public class JobsMenuManager : MonoBehaviour
     private TextMeshProUGUI filteredRunningPanelTitleText;
 
     [SerializeField]
-    private TextMeshProUGUI filteredRunningPanelRunTimeText;
+    private TextMeshProUGUI filteredRunningPanelRunTimeText_1;
+
+    [SerializeField]
+    private TextMeshProUGUI filteredRunningPanelRunTimeText_2;
 
     [SerializeField]
     private TextMeshProUGUI filteredRunningPanelWalltimeText;
 
     [SerializeField]
-    private TextMeshProUGUI filteredRunningPanelQueueText;
+    private Slider filteredRunningPanelMaxWalltimeProgresBar;
 
     [SerializeField]
-    private TextMeshProUGUI filteredRunningPanelModeText;
+    private Slider filteredRunningPanelJobWalltimeProgresBar;
 
     [SerializeField]
     private TextMeshProUGUI reservedPanelTitleText;
@@ -128,9 +136,6 @@ public class JobsMenuManager : MonoBehaviour
         // Selects running jobs to be shown in the job menu by default
         ChangeJobTypeView("running");
 
-        noRunningJobsTextGO.SetActive(false);
-        noQueuedJobsTextGO.SetActive(true);
-        noReservedJobsTextGO.SetActive(false);  
     }
 
     // Update is called once per frame
@@ -231,14 +236,17 @@ public class JobsMenuManager : MonoBehaviour
 
     public void UpdateRunningJobsMenu(SortedDictionary<string, Dictionary<string, string>> newJobsDict)
     {
-        GameObject newRunningJobButtonGO;
-        Color buttonColor;
-
+        
         if (newJobsDict.Count == 0)
         {
             noRunningJobsTextGO.SetActive(true);
             return;
         }
+
+        GameObject newRunningJobButtonGO;
+        Color buttonColor;
+
+        noRunningJobsTextGO.SetActive(false);
 
         foreach (var (currJobId, currJobInfo) in newJobsDict)
         {
@@ -263,18 +271,32 @@ public class JobsMenuManager : MonoBehaviour
             return;
         }
 
+        GameObject newQueuedJobButtonGO;
 
+        noQueuedJobsTextGO.SetActive(false);
+
+        foreach (var (currJobId, currJobInfo) in newJobsDict)
+        {
+            newQueuedJobButtonGO = Instantiate(queuedJobButtonPrefab, queuedJobsContentGO.transform);
+            newQueuedJobButtonGO.transform.name = currJobId;
+
+            newQueuedJobButtonGO.transform.Find("Text (TMP)").GetComponent<TextMeshProUGUI>().text = currJobId + "\n" + currJobInfo["projectName"] + "\n" + currJobInfo["score"];
+        
+            newQueuedJobButtonGO.transform.GetComponent<Button>().onClick.AddListener(() => cooleyManager.ShowQueuedJobInfo(currJobId));
+        }
     }
 
     public void UpdateReservedJobsMenu(SortedDictionary<string, Dictionary<string, string>> newJobsDict)
     {
-        GameObject newReservedJobButtonGO;
-
         if (newJobsDict.Count == 0)
         {
             noReservedJobsTextGO.SetActive(true);
             return;
         }
+
+        GameObject newReservedJobButtonGO;
+
+        noReservedJobsTextGO.SetActive(false);  
 
         foreach (var (currJobName, currJobInfo) in newJobsDict)
         {
@@ -288,13 +310,33 @@ public class JobsMenuManager : MonoBehaviour
         }
     }
 
-    public void UpdateFilteredRunningJobPanel(string jobId, string projectName, string runTime, string walltime, string queue, string mode)
+    public void UpdateFilteredRunningJobPanel(string jobId, string projectName, string runTime, string walltime)
     {
+        DateTime currentRunTime = DateTime.ParseExact(runTime, "HH:mm:ss", CultureInfo.InvariantCulture);
+        DateTime maxWalltime = DateTime.ParseExact("12:00:00", "HH:mm:ss", CultureInfo.InvariantCulture);
+        DateTime jobWalltime = DateTime.ParseExact(walltime, "HH:mm:ss", CultureInfo.InvariantCulture);
+
         filteredRunningPanelTitleText.text = jobId + "\n" + projectName;
-        filteredRunningPanelRunTimeText.text = runTime;
+        filteredRunningPanelRunTimeText_1.text = runTime;
+        filteredRunningPanelRunTimeText_2.text = runTime;
         filteredRunningPanelWalltimeText.text = walltime;
-        filteredRunningPanelQueueText.text = queue;
-        filteredRunningPanelModeText.text = mode;
+
+        filteredRunningPanelMaxWalltimeProgresBar.value = (float) (currentRunTime.TimeOfDay.TotalMilliseconds / maxWalltime.TimeOfDay.TotalMilliseconds);
+        
+        filteredRunningPanelJobWalltimeProgresBar.value = (float) (currentRunTime.TimeOfDay.TotalMilliseconds / jobWalltime.TimeOfDay.TotalMilliseconds);
+    }
+
+    public void UpdateQueuedJobPanel(string jobId, string name, string score, string queue, string walltime, string queuedTime, string nodes, string mode)
+    {
+        OpenQueuedJobsInfoPanel();
+
+        queuedPanelTitleText.text = jobId + "\n" + name;
+        queuedPanelScoreText.text = score;
+        queuedPanelQueueText.text = queue;
+        queuedPanelWalltimeText.text = walltime;
+        queuedPanelQueuedTimeText.text = queuedTime;
+        queuedPanelNodesText.text = nodes;
+        queuedPanelModeText.text = mode;
     }
 
     public void UpdateReservedJobPanel(string name, string queue, string partitions, string formatedStartTime, string formatedDuration)

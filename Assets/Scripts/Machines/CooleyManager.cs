@@ -20,7 +20,8 @@ public class CooleyManager : MonoBehaviour
     /// </summary>
     private const string DATA_URL = "https://status.alcf.anl.gov/cooley/activity.json";
     // Used when machine is down for debuging purposes
-    //private const string DATA_URL = "http://blick.cs.niu.edu:8081/public/cooley-activity-jan-28-2023.json";
+    //private const string DATA_URL = "http://blick.cs.niu.edu:8081/public/cooley-activity-1.json";
+    //private const string DATA_URL = "http://blick.cs.niu.edu:8081/public/cooley-activity-2.json";
 
     /// <summary>
     /// Specifies the height at which the image representing Cooley is placed in the physical world.
@@ -551,6 +552,8 @@ public class CooleyManager : MonoBehaviour
         Dictionary<string, string> runningTempDict = new Dictionary<string, string>();
         Dictionary<string, string> queuedTempDict = new Dictionary<string, string>();
         Dictionary<string, string> reservedTempDict = new Dictionary<string, string>();
+
+        float score;
         
 
         foreach (var currJob in runningJobsInfo)
@@ -565,10 +568,14 @@ public class CooleyManager : MonoBehaviour
 
         foreach (var currJob in queuedJobsInfo)
         {
+            score = Mathf.Round(float.Parse(currJob["score"].ToString()) * 10.0f) * 0.1f;
+
             queuedTempDict = new Dictionary<string, string>();
 
-            // Have to wait to see when there is a queue to add this
-            queuedTempDict.Add("projectName", currJob[""].ToString());
+            queuedTempDict.Add("projectName", currJob["project"].ToString());
+            queuedTempDict.Add("score", score.ToString());
+
+            queuedJobsDict.Add(currJob["jobid"].ToString(), queuedTempDict);
         }
 
         foreach (var currJob in reservedJobsInfo)
@@ -582,6 +589,7 @@ public class CooleyManager : MonoBehaviour
         }
 
         jobsMenuManager.UpdateRunningJobsMenu(runningJobsDict);
+        jobsMenuManager.UpdateQueuedJobsMenu(queuedJobsDict);
         jobsMenuManager.UpdateReservedJobsMenu(reservedJobsDict);
 
         jobsMenuManager.SetActiveJobsMenuButton(true);
@@ -671,7 +679,7 @@ public class CooleyManager : MonoBehaviour
         {
             if (currJob["jobid"].ToString().Equals(jobId))
             {
-                jobsMenuManager.UpdateFilteredRunningJobPanel(jobId, currJob["project"].ToString(), currJob["runtimef"].ToString(), currJob["walltimef"].ToString(), currJob["queue"].ToString(), currJob["mode"].ToString());
+                jobsMenuManager.UpdateFilteredRunningJobPanel(jobId, currJob["project"].ToString(), currJob["runtimef"].ToString(), currJob["walltimef"].ToString());
             }
         }
     }
@@ -690,6 +698,22 @@ public class CooleyManager : MonoBehaviour
 
         // Hides the Show All Nodes button, since all nodes are now visibile
         jobsMenuManager.SetActiveShowAllNodesButton(false);
+    }
+
+    public void ShowQueuedJobInfo(string jobId)
+    {
+        float score; 
+
+        foreach (var currJob in queuedJobsInfo)
+        {
+            if (currJob["jobid"].ToString().Equals(jobId))
+            {
+                score = Mathf.Round(float.Parse(currJob["score"].ToString()) * 10.0f) * 0.1f;
+
+                jobsMenuManager.UpdateQueuedJobPanel(currJob["jobid"].ToString(), currJob["project"].ToString(), score.ToString(), currJob["queue"].ToString(), currJob["walltimef"].ToString(), currJob["queuedtimef"].ToString(), currJob["nodes"].ToString(), currJob["mode"].ToString());
+                break;
+            }
+        }
     }
 
     public void ShowReservedJobInfo(string jobName)
