@@ -11,6 +11,7 @@ public class CooleyTest : MonoBehaviour
     {
         GameObject testingGO;
 
+        cooleyManager.GetData();
         if (cooleyManager.IsMachineRunning())
         {
             testingGO = new GameObject("TestingGO");

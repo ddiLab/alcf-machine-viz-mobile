@@ -19,6 +19,9 @@ public class CooleyManager : MonoBehaviour
     /// URL location for Cooley data.
     /// </summary>
     private const string DATA_URL = "https://status.alcf.anl.gov/cooley/activity.json";
+    // Used when machine is down for debuging purposes
+    //private const string DATA_URL = "http://blick.cs.niu.edu:8081/public/cooley-activity-1.json";
+    //private const string DATA_URL = "http://blick.cs.niu.edu:8081/public/cooley-activity-2.json";
 
     /// <summary>
     /// Specifies the height at which the image representing Cooley is placed in the physical world.
@@ -50,16 +53,16 @@ public class CooleyManager : MonoBehaviour
     /// </summary>
     private const float DATA_TIMER_VALUE = 10;
 
-    /// <summary>
-    /// Timer duration for displaying new color on active node in the legend.
-    /// </summary>
-    private const float LEGEND_ACTIVE_NODE_TIMER_VALUE = 1;
-
 
     /// <summary>
     /// Used to fetch data from a given URL.
     /// </summary>
     private WebClient request = new WebClient();
+
+    /// <summary>
+    /// JObject holding all information fetched for Cooley.
+    /// </summary>
+    private JObject fetchedData;
 
     /// <summary>
     /// JToken holding information for all of Cooleys nodes.
@@ -99,11 +102,6 @@ public class CooleyManager : MonoBehaviour
     private GameObject contentGO;
 
     /// <summary>
-    /// Holds the GameObject that represents the legend for Cooley.
-    /// </summary>
-    private GameObject legendGO;
-
-    /// <summary>
     /// Holds the position of the image representing Cooley in the phyiscal world, and is used as an offset 
     /// for positioning the computer.
     /// </summary>
@@ -114,38 +112,19 @@ public class CooleyManager : MonoBehaviour
     /// rotating the computer.
     /// </summary>
     private Quaternion angleOffset;
+
     
+    private SortedDictionary<string, Dictionary<string, string>> runningJobsDict = new SortedDictionary<string, Dictionary<string, string>>();
+    
+    private SortedDictionary<string, Dictionary<string, string>> queuedJobsDict = new SortedDictionary<string, Dictionary<string, string>>();
+
+    private SortedDictionary<string, Dictionary<string, string>> reservedJobsDict = new SortedDictionary<string, Dictionary<string, string>>();
+
     /// <summary>
     /// Holds the left over time of the timer to fetch new data.
     /// </summary>
     private float dataCountdown;
 
-    /// <summary>
-    /// Holds the left over time of the timer to display a new color on the active node in the legend.
-    /// </summary>
-    private float legendActiveNodeCountdown;
-
-
-    /// <summary>
-    /// JObject holding all information fetched for Cooley.
-    /// </summary>
-    public JObject fetchedData;
-
-    /// <summary>
-    /// Holds a dictionary of all the GameObjects that represent a node in Cooley where a key is the node ID and the value is the
-    /// GameObject representing that node ID.
-    /// </summary>
-    public Dictionary<string, GameObject> nodesDict = new Dictionary<string, GameObject>();
-
-    /// <summary>
-    /// Holds an array of all the GameObjects that represent an invisible rack of Cooley.
-    /// </summary>
-    public GameObject[] visibleRacksArr;
-
-    /// <summary>
-    /// Holds an array of all the GameObjects that represent a visible rack of Cooley.
-    /// </summary>
-    public GameObject[] invisibleRacksArr;
 
     /// <summary>
     /// Holds the Prefab that represents an active node.
@@ -158,11 +137,6 @@ public class CooleyManager : MonoBehaviour
     public GameObject inactiveNodePrefab;
 
     /// <summary>
-    /// Holds the Prefab that represents the legend for Cooley.
-    /// </summary>
-    public GameObject legendPrefab;
-
-    /// <summary>
     /// Holds the Prefab that represents a visible rack of Cooley.
     /// </summary>
     public GameObject visibleRackPrefab;
@@ -172,20 +146,34 @@ public class CooleyManager : MonoBehaviour
     /// </summary>
     public GameObject invisibleRackPrefab;
 
-    /// <summary>
-    /// Holds the button that let's a user display all the nodes after filtering them based on job ids.
-    /// </summary>
-    public GameObject showAllNodesButtonGO;
+    ///
+    ///
+    ///
+    public SettingsMenuManager settingsMenuManager;
+
+
+    ///
+    ///
+    ///
+    public JobsMenuManager jobsMenuManager;
 
     /// <summary>
-    /// Holds the button that let's a user toggle the virtual representation of Cooley's racks.
+    /// Holds a dictionary of all the GameObjects that represent a node in Cooley where a key is the node ID and the value is the
+    /// GameObject representing that node ID.
     /// </summary>
-    public GameObject toggleRacksButtonGO;
+    public Dictionary<string, GameObject> nodesDict = new Dictionary<string, GameObject>();
+
+
 
     /// <summary>
-    /// Holds the script that controlls the menu that displays all the running, queued and reserved jobs of Cooley.
+    /// Holds an array of all the GameObjects that represent an invisible rack of Cooley.
     /// </summary>
-    //public JobMenuController jobMenuController;
+    public GameObject[] visibleRacksArr;
+
+    /// <summary>
+    /// Holds an array of all the GameObjects that represent a visible rack of Cooley.
+    /// </summary>
+    public GameObject[] invisibleRacksArr;
 
     /// <summary>
     /// Number of racks that Cooley has.
@@ -204,20 +192,24 @@ public class CooleyManager : MonoBehaviour
     public bool RacksVisible { get; private set; }
 
 
+    public Dictionary<string, string> CurrentInfoPanel {get; set;}
+
+
     // Start is called before the first frame update
     // Used to initialize the coundown timers and visiblity of GameObjects.
     void Start()
     {
         RacksVisible = true;
 
+        CurrentInfoPanel = new Dictionary<string, string>(2);
+        CurrentInfoPanel.Add("type", "none");
+        CurrentInfoPanel.Add("id", "none");
+
         // Disables the toggle racks button in settings when the app starts
-        toggleRacksButtonGO.GetComponent<Toggle>().interactable = false;
-
-
-        //legendActiveNodeCountdown = LEGEND_ACTIVE_NODE_TIMER_VALUE;
-
-        // Hide show all nodes button in job menu since all nodes are show initially
-        //showAllNodesButtonGO.SetActive(false);
+        settingsMenuManager.SetToggleRacksButtonInteractable(false);
+        
+        jobsMenuManager.SetActiveJobsMenuButton(false);
+        jobsMenuManager.SetActiveShowAllNodesButton(false);
     }
 
 
@@ -241,32 +233,16 @@ public class CooleyManager : MonoBehaviour
 
                 UpdateNodesColors();
 
-                // Updates the job menus buttons
-                //UpdateJobsMenu();
+                UpdateJobsMenu();
+
+                if (CurrentInfoPanel["type"].Equals("running"))
+                    ShowFilteredRunningJobInfo(CurrentInfoPanel["id"]);
+                else if (CurrentInfoPanel["type"].Equals("queued"))
+                    ShowQueuedJobInfo(CurrentInfoPanel["id"]);
+                else if (CurrentInfoPanel["type"].Equals("reserved"))
+                    ShowReservedJobInfo(CurrentInfoPanel["id"]);
+                
             }
-
-
-            // Decrements countdown timer for updating the legend
-            /*
-            if (legendActiveNodeCountdown > 0)
-            {
-                legendActiveNodeCountdown -= Time.deltaTime;
-            }
-
-            // Updates legend active node color and resets timer
-            if (legendActiveNodeCountdown <= 0)
-            {
-                Color nextColor = Random.ColorHSV(); // Random new color
-
-                // Ensures the color isn't white
-                if (nextColor.Equals(Color.white))
-                    nextColor = Random.ColorHSV();
-           
-                legendActiveNodeCountdown = LEGEND_ACTIVE_NODE_TIMER_VALUE;
-
-                legendGO.transform.Find("Content").Find("Nodes").Find("AllocatedNode").Find("Node").GetComponent<MeshRenderer>().material.color = Random.ColorHSV();
-            }
-            */
                 
         }
     }
@@ -326,19 +302,16 @@ public class CooleyManager : MonoBehaviour
     /// </remarks>
     public bool IsMachineRunning()
     {
-        // Fetches data in order to have the most up to date information about the computer
-        GetData();
-
         // Checks if cooley is under maintenance
         if (fetchedData.GetValue("maint") != null)
         {
             // Disables the toggle racks button in settings
-            toggleRacksButtonGO.GetComponent<Toggle>().interactable = false;
+            settingsMenuManager.SetToggleRacksButtonInteractable(false);
             return false;
         }
 
         // Enables the toggle racks button in settings
-        toggleRacksButtonGO.GetComponent<Toggle>().interactable = true;
+        settingsMenuManager.SetToggleRacksButtonInteractable(true);
         return true;
     }
 
@@ -366,14 +339,6 @@ public class CooleyManager : MonoBehaviour
         contentGO = new GameObject("Content");
         contentGO.AddComponent<MeshRenderer>();
         contentGO.transform.parent = cooleyGO.transform;
-
-        /*
-        legendGO = Instantiate(legendPrefab, new Vector3(0.5f, RACK_HEIGHT, -0.4f), Quaternion.identity);
-        legendGO.transform.name = "Legend";
-        legendGO.transform.eulerAngles = new Vector3(0, -90, 0);
-        legendGO.transform.localScale = new Vector3(4, 4, 1);
-        legendGO.transform.parent = contentGO.transform;
-        */
 
         visibleRacksArr = new GameObject[numOfRacks];
         invisibleRacksArr = new GameObject[numOfRacks];
@@ -430,6 +395,8 @@ public class CooleyManager : MonoBehaviour
             // Places the node object as a child of the "Content" GameObject
             nodesDict[nodeId].transform.parent = contentGO.transform;
         }
+
+        CreateJobsMenu();
     }
 
 
@@ -444,7 +411,6 @@ public class CooleyManager : MonoBehaviour
     public void UpdateGameObjects(Transform imageTF)
     {
         string nodeId;                // Holds the ID of the current node
-        //string nodeState;             // Holds the state of the current node
         int rowNum = 0;               // Holds the number of the current row that the current node is being placed in
         int colNum = 0;               // Holds the number of the current column that the current node is being placed in
         int rackNum = 0;              // Holds the number of the current rack that nodes are being placed in
@@ -508,14 +474,8 @@ public class CooleyManager : MonoBehaviour
             // Ommits the .cooley part of the node ID
             nodeId = node.ToString().Substring(1, 5);
 
-            //nodeState = ((JObject)node.First)["state"].ToString();
-
-            // Positions all active nodes in their current position
-            //if (!nodeState.Equals("down"))
-            //{
-                nodesDict[nodeId].transform.localPosition = new Vector3(-0.2f, currentY, currentZ + 0.1f); // Adds 0.1 meters between each nodes in a rack
-                nodesDict[nodeId].transform.Find("Id").GetComponent<TextMeshPro>().text = "\n\n" + nodeId;
-            //}
+            nodesDict[nodeId].transform.localPosition = new Vector3(-0.2f, currentY, currentZ + 0.1f); // Adds 0.1 meters between each nodes in a rack
+            nodesDict[nodeId].transform.Find("Id").GetComponent<TextMeshPro>().text = "\n\n" + nodeId;
 
             // Increments the column and the horizontal positioning
             colNum++;
@@ -575,60 +535,96 @@ public class CooleyManager : MonoBehaviour
     }
 
 
+    private bool JobMenuCheckUpdate()
+    {
+        bool jobIdFound = false;
+
+        foreach (var currJob in runningJobsInfo)
+        {
+            foreach (var (currJobId, currJobInfo) in runningJobsDict)
+            {
+                if (currJob["jobid"].ToString().Equals(currJobId))
+                {
+                    jobIdFound = true;
+                }
+            }
+            
+            if (!jobIdFound)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Starts the creation of the Jobs Menu that lets the user browse through the running, queued, and reserved jobs.
     /// </summary>
-    /*
     public void CreateJobsMenu()
     {
-        // Indicates that this is the inital call to create the menu
-        UpdateJobsMenu(true);
+        Dictionary<string, string> runningTempDict = new Dictionary<string, string>();
+        Dictionary<string, string> queuedTempDict = new Dictionary<string, string>();
+        Dictionary<string, string> reservedTempDict = new Dictionary<string, string>();
+
+        float score;
+        
+
+        foreach (var currJob in runningJobsInfo)
+        {
+            runningTempDict = new Dictionary<string, string>();
+
+            runningTempDict.Add("projectName", currJob["project"].ToString());
+            runningTempDict.Add("hexColor", currJob["color"].ToString());
+
+            runningJobsDict.Add(currJob["jobid"].ToString(), runningTempDict);
+        }
+
+        foreach (var currJob in queuedJobsInfo)
+        {
+            score = Mathf.Round(float.Parse(currJob["score"].ToString()) * 10.0f) * 0.1f;
+
+            queuedTempDict = new Dictionary<string, string>();
+
+            queuedTempDict.Add("projectName", currJob["project"].ToString());
+            queuedTempDict.Add("score", score.ToString());
+
+            queuedJobsDict.Add(currJob["jobid"].ToString(), queuedTempDict);
+        }
+
+        foreach (var currJob in reservedJobsInfo)
+        {
+            reservedTempDict = new Dictionary<string, string>();
+
+            reservedTempDict.Add("queue", currJob["queue"].ToString());
+            reservedTempDict.Add("nodePartitions", currJob["partitions"].ToString());
+
+            reservedJobsDict.Add(currJob["name"].ToString(), reservedTempDict);
+        }
+
+        jobsMenuManager.UpdateRunningJobsMenu(runningJobsDict);
+        jobsMenuManager.UpdateQueuedJobsMenu(queuedJobsDict);
+        jobsMenuManager.UpdateReservedJobsMenu(reservedJobsDict);
+
+        jobsMenuManager.SetActiveJobsMenuButton(true);
     }
-    */
+
 
     /// <summary>
     /// Saves all the running jobs and their identifying colors, and uses the
     /// JobsMenuController script to initialize the menu if 'initializeMenu' = true,
     /// otherwise it gives the script updated data on the current jobs.
     /// </summary>
-    /// <param name="initializeMenu"></param>
-    /*
-    private void UpdateJobsMenu(bool initializeMenu = false)
+    private void UpdateJobsMenu()
     {
-        List<string> reservedJobsNames = new List<string>();
-        List<string> queuedJobsIds = new List<string>();
-        List<string> runningJobsIds = new List<string>();                                // Holds a list of all the running job ids
-        Dictionary<string, string> runningJobsColors = new Dictionary<string, string>(); // Holds the colors for each running job ID where the key
-                                                                                         // is the job ID and the value is a HEX representation of
-                                                                                         // the color
-        
-        foreach (var currJob in reservedJobsInfo)
+        if (!JobMenuCheckUpdate())
         {
-            reservedJobsNames.Add(currJob["name"].ToString());
+            Debug.Log("No need to update Jobs Menu");
+            return;
         }
-
-        foreach (var currJob in queuedJobsInfo)
-        {
-            queuedJobsIds.Add(currJob["jobid"].ToString());
-        }
-
-        foreach (var currJob in runningJobsInfo)
-        {
-            runningJobsIds.Add(currJob["jobid"].ToString());
-            runningJobsColors.Add(currJob["jobid"].ToString(), currJob["color"].ToString());
-        }
-
-
-        // Sorts the jobIds list by ascending order
-        runningJobsIds.Sort((job1, job2) => job1.CompareTo(job2));
-
-        // Checks whether the jobs menu needs to be initialized or updated
-        if (initializeMenu)
-            jobMenuController.InitializeItems(runningJobsIds, runningJobsColors);
-        else
-            jobMenuController.UpdateItems(runningJobsIds, runningJobsColors);
+        Debug.Log("Update needed for Jobs Menu");
+        CreateJobsMenu();
     }
-    */
 
 
     /// <summary>
@@ -652,17 +648,10 @@ public class CooleyManager : MonoBehaviour
     /// Filters all the nodes to only show the ones that are allocated to the specified 'jobId'.
     /// </summary>
     /// <param name="jobId">The job ID to look for while filtering.</param>
-    /*
     public void FilterNodeGameObjectsByJobId(string jobId)
     {
         List<string> nodesToShow = new List<string>(); // Holds a list of all the nodes that are allocated to the given job ID
-
-        Debug.Log(jobId);
         
-        // Show the Show All Nodes button since we will filter through the nodes now
-        showAllNodesButtonGO.SetActive(true);
-        
-
         foreach(var job in runningJobsInfo)
         {
             // Checks if the current job ID is the given job ID
@@ -693,13 +682,18 @@ public class CooleyManager : MonoBehaviour
         {
             nodesDict[node].SetActive(true);
         }
+
+        jobsMenuManager.SetActiveShowAllNodesButton(true);
+
+        
+        jobsMenuManager.OpenFilteredRunningJobsInfoPanel();
+
+        ShowFilteredRunningJobInfo(jobId);
     }
-    */
 
     /// <summary>
     /// Ensures that all the node GameObjects are visible.
     /// </summary>
-    /*
     public void ShowAllNodeGameObjects()
     {
         foreach (var nodeGameObject in nodesDict)
@@ -710,7 +704,47 @@ public class CooleyManager : MonoBehaviour
         }
 
         // Hides the Show All Nodes button, since all nodes are now visibile
-        showAllNodesButtonGO.SetActive(false);
+        jobsMenuManager.SetActiveShowAllNodesButton(false);
     }
-    */
+
+    public void ShowFilteredRunningJobInfo(string jobId)
+    {
+        foreach (var currJob in runningJobsInfo)
+        {
+            if (currJob["jobid"].ToString().Equals(jobId))
+            {
+                jobsMenuManager.UpdateFilteredRunningJobPanel(jobId, currJob["project"].ToString(), currJob["runtimef"].ToString(), currJob["walltimef"].ToString());
+                
+                break;
+            }
+        }
+    }
+
+    public void ShowQueuedJobInfo(string jobId)
+    {
+        float score; 
+
+        foreach (var currJob in queuedJobsInfo)
+        {
+            if (currJob["jobid"].ToString().Equals(jobId))
+            {
+                score = Mathf.Round(float.Parse(currJob["score"].ToString()) * 10.0f) * 0.1f;
+
+                jobsMenuManager.UpdateQueuedJobPanel(currJob["jobid"].ToString(), currJob["project"].ToString(), score.ToString(), currJob["queue"].ToString(), currJob["walltimef"].ToString(), currJob["queuedtimef"].ToString(), currJob["nodes"].ToString(), currJob["mode"].ToString());
+                break;
+            }
+        }
+    }
+
+    public void ShowReservedJobInfo(string jobName)
+    {
+        foreach (var currJob in reservedJobsInfo)
+        {
+            if (currJob["name"].ToString().Equals(jobName))
+            {
+                jobsMenuManager.UpdateReservedJobPanel(currJob["name"].ToString(), currJob["queue"].ToString(), currJob["partitions"].ToString(), currJob["startf"].ToString(), currJob["durationf"].ToString(), currJob["tminus"].ToString());
+                break;
+            }
+        }
+    }
 }

@@ -5,26 +5,38 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using TMPro;
 
-public class SettingsManager : MonoBehaviour
+public class SettingsMenuManager : MonoBehaviour
 {
-    public GameObject settingsPanelGO;
+    public GameObject panelGO;
     public GameObject arCameraGO;
     public GameObject arSessionOriginGO;
-    public GameObject openSettingsButtonGO;
+    public GameObject openButtonGO;
+
+    /// <summary>
+    /// Holds the button that let's a user toggle the virtual representation of Cooley's racks.
+    /// </summary>
+    public GameObject toggleRacksButtonGO;
+    
     public GameObject arPlanePrefab;
-    //public TextMeshProUGUI closeButtonTMP;
+
+    
 
     public CooleyManager cooleyManager;
+    public JobsMenuManager jobsMenuManager;
 
     private AROcclusionManager arOcclusionManager;
     private ARPlaneManager arPlaneManager;
     private bool arPlanesVisible = true;
+
+    private Vector3 initialOpenButtonGO;
 
     // Start is called before the first frame update
     void Start()
     {
         arOcclusionManager = arCameraGO.GetComponent<AROcclusionManager>();
         arPlaneManager = arSessionOriginGO.GetComponent<ARPlaneManager>();
+
+        Screen.orientation = ScreenOrientation.Portrait;
     }
 
     // Update is called once per frame
@@ -34,25 +46,32 @@ public class SettingsManager : MonoBehaviour
     }
 
 
-    public void OpenSettings()
+    public void OpenSettingsMenu()
     {
-        Screen.orientation = ScreenOrientation.Portrait;
-        settingsPanelGO.SetActive(true);
-        openSettingsButtonGO.SetActive(false);
+        //Screen.orientation = ScreenOrientation.Portrait;
+        panelGO.SetActive(true);
+        openButtonGO.SetActive(false);
 
-
-        // Sets the shader of the UI text to overlay to not be affected by the occlusion when the menu is open
-        //closeButtonTM.fontSharedMaterial.shader = Shader.Find("TextMeshPro/Mobile/Distance Field Overlay");
+        jobsMenuManager.SetActiveJobsMenuButton(false);
     }
 
 
-    public void CloseSettings()
+    public void CloseSettingsMenu()
     {
-        Screen.orientation = ScreenOrientation.AutoRotation;
-        settingsPanelGO.SetActive(false);
-        openSettingsButtonGO.SetActive(true);
+        //Screen.orientation = ScreenOrientation.AutoRotation;
+        panelGO.SetActive(false);
+        openButtonGO.SetActive(true);
 
-        //closeButtonTM.fontSharedMaterial.shader = Shader.Find("TextMeshPro/Mobile/Distance Field");
+        if (GameObject.Find("Cooley") != null && cooleyManager.IsMachineRunning())
+        {
+            jobsMenuManager.SetActiveJobsMenuButton(true);
+        }
+    }
+
+
+    public void SetToggleRacksButtonInteractable(bool newStatus)
+    {
+        toggleRacksButtonGO.GetComponent<Toggle>().interactable = newStatus;
     }
 
 
