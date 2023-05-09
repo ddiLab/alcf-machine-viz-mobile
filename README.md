@@ -9,6 +9,8 @@ The user is also able to interact with the visualization by clicking on the `Job
 
 Lastly, the app has a `Settings` button that lets the user control whether the planes that are detected by the camera are visualized, if Occlusion should be enabled or not, and if the visualized racks of the Cooley machine should be visible.
 
+**NOTE:** Video demonstration of the app coming soon
+
 ## Project Setup
 In order to work on this project, you should be able to download/clone this repo locally, and open it using Unity Hub. This should automatically have everything setup for development. However if there are any difficulties I recommend watching the following [video tutorial](https://www.youtube.com/watch?v=FWyTf3USDCQ). 
 
